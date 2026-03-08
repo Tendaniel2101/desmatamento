@@ -1,7 +1,7 @@
 ﻿from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from sqlalchemy import create_engine, Column, Integer, String, Float, Date, Text, Boolean
+from sqlalchemy import create_engine, Column, Integer, String, Float, Date, Text, Boolean, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from pydantic import BaseModel
@@ -117,6 +117,16 @@ class AcaoInput(BaseModel):
 @app.get("/")
 def raiz():
     return {"mensagem": "Servidor funcionando!"}
+
+@app.get("/migrar")
+def migrar(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("ALTER TABLE agentes ADD COLUMN IF NOT EXISTS admin BOOLEAN DEFAULT FALSE"))
+        db.execute(text("ALTER TABLE agentes ADD COLUMN IF NOT EXISTS ativo BOOLEAN DEFAULT TRUE"))
+        db.commit()
+        return {"mensagem": "Migracao concluida!"}
+    except Exception as e:
+        return {"erro": str(e)}
 
 @app.post("/login")
 def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):

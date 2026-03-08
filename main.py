@@ -49,6 +49,16 @@ def get_db():
     finally:
         db.close()
 
+class PontoInput(BaseModel):
+    latitude: float
+    longitude: float
+    area_ha: float
+    fonte: str
+    data_deteccao: date
+    municipio: str
+    status: Optional[str] = "pendente"
+    observacoes: Optional[str] = None
+
 class AcaoInput(BaseModel):
     ponto_id: int
     agente_id: int
@@ -63,6 +73,18 @@ def raiz():
 @app.get("/pontos")
 def listar_pontos(db: Session = Depends(get_db)):
     return db.query(PontoDesmatamento).all()
+
+@app.post("/pontos")
+def criar_ponto(ponto: PontoInput, db: Session = Depends(get_db)):
+    novo = PontoDesmatamento(**ponto.model_dump())
+    db.add(novo)
+    db.commit()
+    db.refresh(novo)
+    return novo
+
+@app.get("/acoes")
+def listar_acoes(db: Session = Depends(get_db)):
+    return db.query(AcaoCampo).all()
 
 @app.post("/acoes")
 def registrar_acao(acao: AcaoInput, db: Session = Depends(get_db)):

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+﻿from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, Column, Integer, String, Float, Date, Text
 from sqlalchemy.ext.declarative import declarative_base
@@ -6,8 +6,11 @@ from sqlalchemy.orm import sessionmaker, Session
 from pydantic import BaseModel
 from datetime import date
 from typing import Optional
+import os
 
-DATABASE_URL = "postgresql://postgres:DApb%3F3178@localhost:5432/desmatamento_db"
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if not DATABASE_URL:
+    raise Exception("DATABASE_URL nao configurada!")
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
@@ -37,13 +40,7 @@ class AcaoCampo(Base):
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 def get_db():
     db = SessionLocal()

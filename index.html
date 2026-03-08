@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -48,16 +48,16 @@
 <div id="loginPage" class="login-container">
   <div class="login-box">
     <h1>🌿 Monitoramento</h1>
-    <p>Sistema de Desmatamento — Polícia Ambiental</p>
+    <p>Sistema de Desmatamento — Policia Ambiental</p>
     <div class="form-group">
       <label>Email</label>
       <input type="email" id="loginEmail" placeholder="seu@email.com">
     </div>
     <div class="form-group">
       <label>Senha</label>
-      <input type="password" id="loginSenha" placeholder="••••••••">
+      <input type="password" id="loginSenha" placeholder="senha">
     </div>
-    <button class="btn" onclick="fazerLogin()">Entrar</button>
+    <button class="btn" id="btnLogin">Entrar</button>
     <div id="loginErro" class="erro"></div>
   </div>
 </div>
@@ -67,7 +67,7 @@
     <h1>🌿 Monitoramento de Desmatamento</h1>
     <div>
       <span id="nomeUsuario" style="margin-right:12px; font-size:14px;"></span>
-      <button class="logout-btn" onclick="fazerLogout()">Sair</button>
+      <button class="logout-btn" id="btnLogout">Sair</button>
     </div>
   </header>
 
@@ -79,7 +79,7 @@
       </div>
       <div class="stat-card">
         <h3 id="totalAcoes">0</h3>
-        <p>Ações de Campo</p>
+        <p>Acoes de Campo</p>
       </div>
       <div class="stat-card">
         <h3 id="totalPendentes">0</h3>
@@ -88,7 +88,7 @@
     </div>
 
     <div id="adminSection" class="admin-section hidden">
-      <h2>⚙️ Criar Novo Agente</h2>
+      <h2>Criar Novo Agente</h2>
       <div class="form-row">
         <div class="form-group-inline">
           <label>Nome</label>
@@ -103,12 +103,12 @@
           <input type="password" id="novaSenha" placeholder="Senha">
         </div>
       </div>
-      <button class="btn-sm" onclick="criarAgente()">Criar Agente</button>
+      <button class="btn-sm" id="btnCriarAgente">Criar Agente</button>
       <div id="agenteMsg" style="margin-top:8px; font-size:13px;"></div>
     </div>
 
     <div class="card">
-      <h2>📍 Registrar Ponto de Desmatamento</h2>
+      <h2>Registrar Ponto de Desmatamento</h2>
       <div class="form-row">
         <div class="form-group-inline">
           <label>Latitude</label>
@@ -119,12 +119,12 @@
           <input type="number" id="lon" placeholder="-46.6333" step="0.0001">
         </div>
         <div class="form-group-inline">
-          <label>Área (ha)</label>
+          <label>Area (ha)</label>
           <input type="number" id="area" placeholder="2.5" step="0.1">
         </div>
         <div class="form-group-inline">
-          <label>Município</label>
-          <input type="text" id="municipio" placeholder="São Paulo">
+          <label>Municipio</label>
+          <input type="text" id="municipio" placeholder="Sao Paulo">
         </div>
         <div class="form-group-inline">
           <label>Fonte</label>
@@ -136,22 +136,31 @@
           </select>
         </div>
         <div class="form-group-inline">
-          <label>Data Detecção</label>
+          <label>Data Deteccao</label>
           <input type="date" id="dataDeteccao">
         </div>
         <div class="form-group-inline" style="grid-column: span 2;">
-          <label>Observações</label>
-          <input type="text" id="obsP" placeholder="Observações">
+          <label>Observacoes</label>
+          <input type="text" id="obsP" placeholder="Observacoes">
         </div>
       </div>
-      <button class="btn-sm" onclick="registrarPonto()">Registrar Ponto</button>
+      <button class="btn-sm" id="btnRegistrarPonto">Registrar Ponto</button>
       <div id="pontoMsg" style="margin-top:8px; font-size:13px;"></div>
     </div>
 
     <div class="card">
-      <h2>📋 Pontos de Desmatamento</h2>
+      <h2>Pontos de Desmatamento</h2>
       <table>
-        <thead><tr><th>ID</th><th>Município</th><th>Área (ha)</th><th>Fonte</th><th>Data</th><th>Status</th></tr></thead>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Municipio</th>
+            <th>Area (ha)</th>
+            <th>Fonte</th>
+            <th>Data</th>
+            <th>Status</th>
+          </tr>
+        </thead>
         <tbody id="tabelaPontos"></tbody>
       </table>
     </div>
@@ -159,103 +168,108 @@
 </div>
 
 <script>
-  const API = "https://desmatamento-production.up.railway.app";
-  let token = null;
-  let isAdmin = false;
+var API = "https://desmatamento-production.up.railway.app";
+var token = null;
+var isAdmin = false;
 
-  async function fazerLogin() {
-    const email = document.getElementById("loginEmail").value;
-    const senha = document.getElementById("loginSenha").value;
-    const erro = document.getElementById("loginErro");
-    erro.textContent = "";
-    try {
-      const res = await fetch(${API}/login, {
-        method: "POST",
-        headers: {"Content-Type": "application/x-www-form-urlencoded"},
-        body: username=&password=
-      });
-      const data = await res.json();
-      if (!res.ok) { erro.textContent = "Email ou senha incorretos."; return; }
-      token = data.access_token;
-      isAdmin = data.admin;
-      document.getElementById("nomeUsuario").textContent = data.nome;
-      document.getElementById("loginPage").classList.add("hidden");
-      document.getElementById("mainPage").classList.remove("hidden");
-      if (isAdmin) document.getElementById("adminSection").classList.remove("hidden");
-      carregarDados();
-    } catch(e) {
-      erro.textContent = "Erro ao conectar com o servidor.";
-    }
-  }
+function fazerLogin() {
+  var email = document.getElementById("loginEmail").value;
+  var senha = document.getElementById("loginSenha").value;
+  var erro = document.getElementById("loginErro");
+  erro.textContent = "";
 
-  function fazerLogout() {
-    token = null;
-    document.getElementById("loginPage").classList.remove("hidden");
-    document.getElementById("mainPage").classList.add("hidden");
-  }
+  fetch(API + "/login", {
+    method: "POST",
+    headers: {"Content-Type": "application/x-www-form-urlencoded"},
+    body: "username=" + encodeURIComponent(email) + "&password=" + encodeURIComponent(senha)
+  })
+  .then(function(res) { return res.json().then(function(data) { return {ok: res.ok, data: data}; }); })
+  .then(function(result) {
+    if (!result.ok) { erro.textContent = "Email ou senha incorretos."; return; }
+    token = result.data.access_token;
+    isAdmin = result.data.admin;
+    document.getElementById("nomeUsuario").textContent = result.data.nome;
+    document.getElementById("loginPage").classList.add("hidden");
+    document.getElementById("mainPage").classList.remove("hidden");
+    if (isAdmin) document.getElementById("adminSection").classList.remove("hidden");
+    carregarDados();
+  })
+  .catch(function() { erro.textContent = "Erro ao conectar com o servidor."; });
+}
 
-  async function carregarDados() {
-    const headers = {"Authorization": Bearer };
-    const [pontos, acoes] = await Promise.all([
-      fetch(${API}/pontos, {headers}).then(r => r.json()),
-      fetch(${API}/acoes, {headers}).then(r => r.json())
-    ]);
+function fazerLogout() {
+  token = null;
+  document.getElementById("loginPage").classList.remove("hidden");
+  document.getElementById("mainPage").classList.add("hidden");
+}
+
+function carregarDados() {
+  var headers = {"Authorization": "Bearer " + token};
+  fetch(API + "/pontos", {headers: headers})
+  .then(function(r) { return r.json(); })
+  .then(function(pontos) {
     document.getElementById("totalPontos").textContent = pontos.length;
-    document.getElementById("totalAcoes").textContent = acoes.length;
-    document.getElementById("totalPendentes").textContent = pontos.filter(p => p.status === "pendente").length;
-    const tbody = document.getElementById("tabelaPontos");
-    tbody.innerHTML = pontos.map(p => 
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td><span class="badge badge-"></span></td>
-      </tr>
-    ).join("");
-  }
-
-  async function registrarPonto() {
-    const msg = document.getElementById("pontoMsg");
-    const body = {
-      latitude: parseFloat(document.getElementById("lat").value),
-      longitude: parseFloat(document.getElementById("lon").value),
-      area_ha: parseFloat(document.getElementById("area").value),
-      municipio: document.getElementById("municipio").value,
-      fonte: document.getElementById("fonte").value,
-      data_deteccao: document.getElementById("dataDeteccao").value,
-      observacoes: document.getElementById("obsP").value
-    };
-    const res = await fetch(${API}/pontos, {
-      method: "POST",
-      headers: {"Content-Type": "application/json", "Authorization": Bearer },
-      body: JSON.stringify(body)
-    });
-    if (res.ok) { msg.style.color="green"; msg.textContent = "Ponto registrado!"; carregarDados(); }
-    else { msg.style.color="red"; msg.textContent = "Erro ao registrar ponto."; }
-  }
-
-  async function criarAgente() {
-    const msg = document.getElementById("agenteMsg");
-    const body = {
-      nome: document.getElementById("novoNome").value,
-      email: document.getElementById("novoEmail").value,
-      senha: document.getElementById("novaSenha").value
-    };
-    const res = await fetch(${API}/agentes, {
-      method: "POST",
-      headers: {"Content-Type": "application/json", "Authorization": Bearer },
-      body: JSON.stringify(body)
-    });
-    const data = await res.json();
-    if (res.ok) { msg.style.color="green"; msg.textContent = data.mensagem; }
-    else { msg.style.color="red"; msg.textContent = data.detail || "Erro ao criar agente."; }
-  }
-
-  document.getElementById("loginSenha").addEventListener("keypress", e => {
-    if (e.key === "Enter") fazerLogin();
+    document.getElementById("totalPendentes").textContent = pontos.filter(function(p) { return p.status === "pendente"; }).length;
+    var tbody = document.getElementById("tabelaPontos");
+    tbody.innerHTML = pontos.map(function(p) {
+      return "<tr><td>" + p.id + "</td><td>" + p.municipio + "</td><td>" + p.area_ha + "</td><td>" + p.fonte + "</td><td>" + p.data_deteccao + "</td><td><span class='badge badge-" + p.status + "'>" + p.status + "</span></td></tr>";
+    }).join("");
   });
+  fetch(API + "/acoes", {headers: headers})
+  .then(function(r) { return r.json(); })
+  .then(function(acoes) {
+    document.getElementById("totalAcoes").textContent = acoes.length;
+  });
+}
+
+function registrarPonto() {
+  var msg = document.getElementById("pontoMsg");
+  var body = {
+    latitude: parseFloat(document.getElementById("lat").value),
+    longitude: parseFloat(document.getElementById("lon").value),
+    area_ha: parseFloat(document.getElementById("area").value),
+    municipio: document.getElementById("municipio").value,
+    fonte: document.getElementById("fonte").value,
+    data_deteccao: document.getElementById("dataDeteccao").value,
+    observacoes: document.getElementById("obsP").value
+  };
+  fetch(API + "/pontos", {
+    method: "POST",
+    headers: {"Content-Type": "application/json", "Authorization": "Bearer " + token},
+    body: JSON.stringify(body)
+  })
+  .then(function(res) {
+    if (res.ok) { msg.style.color = "green"; msg.textContent = "Ponto registrado!"; carregarDados(); }
+    else { msg.style.color = "red"; msg.textContent = "Erro ao registrar ponto."; }
+  });
+}
+
+function criarAgente() {
+  var msg = document.getElementById("agenteMsg");
+  var body = {
+    nome: document.getElementById("novoNome").value,
+    email: document.getElementById("novoEmail").value,
+    senha: document.getElementById("novaSenha").value
+  };
+  fetch(API + "/agentes", {
+    method: "POST",
+    headers: {"Content-Type": "application/json", "Authorization": "Bearer " + token},
+    body: JSON.stringify(body)
+  })
+  .then(function(res) { return res.json().then(function(data) { return {ok: res.ok, data: data}; }); })
+  .then(function(result) {
+    if (result.ok) { msg.style.color = "green"; msg.textContent = result.data.mensagem; }
+    else { msg.style.color = "red"; msg.textContent = result.data.detail || "Erro ao criar agente."; }
+  });
+}
+
+document.getElementById("btnLogin").addEventListener("click", fazerLogin);
+document.getElementById("btnLogout").addEventListener("click", fazerLogout);
+document.getElementById("btnRegistrarPonto").addEventListener("click", registrarPonto);
+document.getElementById("btnCriarAgente").addEventListener("click", criarAgente);
+document.getElementById("loginSenha").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") fazerLogin();
+});
 </script>
 </body>
 </html>
